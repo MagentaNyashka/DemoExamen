@@ -5,7 +5,7 @@ from datetime import datetime
 from enum import StrEnum
 import openpyxl
 
-from sqlalchemy import Integer, Column, ForeignKey, String, Float, Date, UniqueConstraint, text, CheckConstraint
+from sqlalchemy import ARRAY, Integer, Column, ForeignKey, String, Float, Date, UniqueConstraint, text, CheckConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from db.base import Base
@@ -37,6 +37,7 @@ class Product(Base):
     __tablename__ = "Product"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    article: Mapped[str] = mapped_column(String(), unique=True)
     title: Mapped[str] = mapped_column(String(30))
     measure_type: Mapped[str] = mapped_column(String(30))
     price: Mapped[float] = mapped_column(Float)
@@ -58,7 +59,6 @@ class Order(Base):
     __tablename__ = "Order"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    article: Mapped[str] = mapped_column(String(50))
     order_date: Mapped[Date] = mapped_column(Date)
     delivery_date: Mapped[Date] = mapped_column(Date)
     address_id: Mapped[int] = mapped_column(ForeignKey("Delivery.id"))
@@ -66,6 +66,25 @@ class Order(Base):
     user = relationship(User, back_populates="orders")
     challenge_code: Mapped[int] = mapped_column()
     status: Mapped[str] = mapped_column(String(30))
+
+class OrderItem(Base):
+     __tablename__ = "OrderItem"
+
+     id: Mapped[int] = mapped_column(primary_key=True)
+     article: Mapped[str] = mapped_column(ForeignKey("Product.article"))
+     order: Mapped[int] = mapped_column(ForeignKey("Order.id"))
+     quantity: Mapped[int] = mapped_column()
+
+def normalize_article(data: str):
+    raw = [x.strip() for x in data.split(',')]
+    articles = []
+    quantity = []
+
+    for i in range(0, len(raw), 2):
+        articles.append(raw[i])
+        quantity.append(int(raw[i+1]))
+
+    return articles, quantity
 
 
 if __name__ == '__main__':
@@ -105,6 +124,29 @@ if __name__ == '__main__':
         session.add_all(delivery_data)
 
 
+        products_table = openpyxl.load_workbook("db/import/Tovar.xlsx")
+
+        products_sheet = products_table.active
+
+        products_data = [
+            Product(
+                article=str(row[0].value),
+                title=str(row[1].value),
+                measure_type=str(row[2].value),
+                price=float(row[3].value),
+                supplier=str(row[4].value),
+                producer=str(row[5].value),
+                category=str(row[6].value),
+                discount=float(row[7].value),
+                quantity=int(row[8].value),
+                description=str(row[9].value),
+                image_url=f"{app_settings.root}/assets/images/{str(row[10])}",
+            )
+            for row in list(products_sheet.iter_rows())[1:] if row[0].value is not None
+        ]
+        session.add_all(products_data)
+        session.commit()
+
         order_table = openpyxl.load_workbook("db/import/Заказ_import.xlsx")
 
         order_sheet = order_table.active
@@ -113,7 +155,6 @@ if __name__ == '__main__':
         order_data = [
             Order(
                 id=int(row[0].value),
-                article=str(row[1].value),
                 order_date=f(str(row[2].value)),
                 delivery_date=str(row[3].value),
                 address_id=int(row[4].value),
@@ -124,27 +165,22 @@ if __name__ == '__main__':
             for row in list(order_sheet.iter_rows())[1:]  if row[0].value is not None
         ]
         session.add_all(order_data)
+        session.commit()
 
+        order_item_data = []
+        for row in list(order_sheet.iter_rows())[1:]:
+            if row[0].value is not None:
+                article_cell = str(row[1].value)
+                articles, quantities = normalize_article(article_cell)
+                for i in range(0, len(articles)):
+                    order_item_data.append(OrderItem(
+                        order=int(row[0].value),
+                        article=articles[i],
+                        quantity=quantities[i]
+                ))
+            else:
+                break
 
+        session.add_all(order_item_data)
+        session.commit()
 
-        # products_table = openpyxl.load_workbook("db/import/Tovar.xlsx")
-
-        # products_sheet = products_table.active
-
-        # products_data = [
-        #     Product(
-        #         article=str(row[0].value),
-        #         title=str(row[1].value),
-        #         measure_type=str(row[2].value),
-        #         price=float(row[3].value),
-        #         supplier=str(row[4].value),
-        #         producer=str(row[5].value),
-        #         category=str(row[6].value),
-        #         discount=float(row[7].value),
-        #         quantity=int(row[8].value),
-        #         description=str(row[9].value),
-        #         image_url=f"{app_settings.root}/assets/images/{str(row[10])}",
-        #     )
-        #     for row in list(products_sheet.iter_rows())[1:] if row[0].value is not None
-        # ]
-        # session.add_all(products_data)
