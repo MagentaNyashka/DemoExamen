@@ -20,5 +20,6 @@ def create_session(commit: bool = True):
     except Exception as err:
         print(f"Error: {err}; Rollback!")
         session.rollback()
+        raise err
     finally:
         session.close()

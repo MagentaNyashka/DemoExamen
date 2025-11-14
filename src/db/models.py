@@ -3,8 +3,9 @@ import hashlib
 import random
 from datetime import datetime
 from enum import StrEnum
+import openpyxl
 
-from sqlalchemy import Integer, Column, ForeignKey, UniqueConstraint, text, CheckConstraint
+from sqlalchemy import Integer, Column, ForeignKey, String, Float, Date, UniqueConstraint, text, CheckConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from db.base import Base
@@ -13,135 +14,58 @@ from settings import app_settings
 from settings import app_settings
 
 
-class RoleTypeEnum(StrEnum):
-    admin = "админ"
-    manager = "менеджер"
-    simple = "пользователь"
-    guest = "гость"
-
-    @classmethod
-    def str_values(cls):
-        return ', '.join(f"'{e.name}'" for e in cls)
-
+def f(string: str):
+            string = string.split()[0]
+            try:
+                return datetime.strptime(string, "%Y-%m-%d")
+            except Exception:
+                return datetime.strptime(string, "%m/%d/%Y")
 
 class User(Base):
-    username: Mapped[str] = mapped_column(unique=True)
-    password_hash: Mapped[str] = mapped_column()
+    __tablename__ = "User"
+
+    __table_args__ = (UniqueConstraint('name', 'role'),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    role: Mapped[str] = mapped_column(String(30))
+    name: Mapped[str] = mapped_column(String(50))
+    login: Mapped[str] = mapped_column(String(50))
+    password: Mapped[str] = mapped_column(String(50))
     orders = relationship("Order", back_populates="user", uselist=True)
-    role_type: Mapped[str] = mapped_column(default="simle")
-
-    exclude = {"password_hash", "id", "role_type"}
-    extra = {"encrypt_user_id", "role"}
-
-    __table_args__ = (
-        CheckConstraint(
-            f"role_type in ({RoleTypeEnum.str_values()})"
-        ),
-    )
-
-    @property
-    def role(self):
-        return getattr(RoleTypeEnum, self.role_type).value
-
-    @property
-    def encrypt_user_id(self) -> str:
-        data = f"{self.id}:{app_settings.salt}:{datetime.utcnow()}".encode('utf-8')
-        return base64.urlsafe_b64encode(data).decode('utf-8')
-
-    @classmethod
-    def decrypt_user_id(cls, encrypted_id: str) -> int:
-        decoded = base64.urlsafe_b64decode(encrypted_id).decode('utf-8')
-        user_id_str, received_salt, _ = decoded.split(':')
-        if received_salt != app_settings.salt:
-            raise ValueError("Неверная соль")
-        return int(user_id_str)
-
-    @staticmethod
-    def hash_string(string: str):
-        return hashlib.sha256(string.encode("utf-8")).hexdigest()
-
-    def set_password(self, password: str):
-        self.password_hash = self.hash_string(password)
-
-    def check_password(self, password: str):
-        return self.password_hash == self.hash_string(password)
-
-
-class Category(Base):
-    title: Mapped[str] = mapped_column(unique=True)
-    description: Mapped[str] = mapped_column()
-
-    products = relationship("Product", back_populates="category", uselist=True)
-
-
-class MeasureTypeEnum(StrEnum):
-    unit = "штука"
-    pack = "упаковка"
-    container = "партия"
-
-    @classmethod
-    def str_values(cls):
-        return ', '.join(f"'{e.name}'" for e in cls)
-
 
 class Product(Base):
+    __tablename__ = "Product"
 
-    exclude = {"measure_type"}
-    extra = {"measure", "category", "corrected_price"}
-
-    order_products = relationship("OrderProduct", back_populates="product", uselist=True)
-    price: Mapped[float] = mapped_column()
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(30))
+    measure_type: Mapped[str] = mapped_column(String(30))
+    price: Mapped[float] = mapped_column(Float)
+    supplier: Mapped[str] = mapped_column(String(30))
+    producer: Mapped[str] = mapped_column(String(30))
+    category: Mapped[str] = mapped_column(String(30))
+    discount: Mapped[float] = mapped_column(Float)
     quantity: Mapped[int] = mapped_column()
-    title: Mapped[str] = mapped_column()
-    description: Mapped[str] = mapped_column()
-    image_url: Mapped[str] = mapped_column(nullable=True)
-    supplier: Mapped[str] = mapped_column()
-    producer: Mapped[str] = mapped_column()
-    measure_type: Mapped[str] = mapped_column()
-    discount: Mapped[float] = mapped_column(default=0)
+    description: Mapped[str] = mapped_column(String(1024))
+    image_url: Mapped[str] = mapped_column(String(100))
 
-    category = relationship(Category, back_populates="products")
-    category_id: Mapped[int] = Column(Integer, ForeignKey("category.id"))
+class Delivery(Base):
+    __tablename__ = "Delivery"
 
-    @property
-    def corrected_price(self):
-        if self.discount > 0:
-            return round(self.price * (100 - self.discount) / 100, 2)
-        return None
-
-    @property
-    def measure(self):
-        return getattr(MeasureTypeEnum, self.measure_type).value
-
-    __table_args__ = (
-        CheckConstraint(
-            f"measure_type in ({MeasureTypeEnum.str_values()})"
-        ),
-    )
-
-
-class OrderProduct(Base):
-
-    order = relationship("Order", back_populates="order_products")
-    product = relationship(Product, back_populates="order_products")
-
-    product_id: Mapped[int] = Column(Integer, ForeignKey("product.id"))
-    order_id: Mapped[int] = Column(Integer, ForeignKey("order.id"))
-    quantity: Mapped[int] = mapped_column()
-
-    __table_args__ = (
-        UniqueConstraint(product_id, order_id),
-    )
-
+    id: Mapped[int] = mapped_column(primary_key=True)
+    address: Mapped[str] = mapped_column(String(256))
 
 class Order(Base):
+    __tablename__ = "Order"
 
-    extra = {"order_products"}
-
+    id: Mapped[int] = mapped_column(primary_key=True)
+    article: Mapped[str] = mapped_column(String(50))
+    order_date: Mapped[Date] = mapped_column(Date)
+    delivery_date: Mapped[Date] = mapped_column(Date)
+    address_id: Mapped[int] = mapped_column(ForeignKey("Delivery.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("User.id"), nullable=True)
     user = relationship(User, back_populates="orders")
-    order_products = relationship(OrderProduct, back_populates="order")
-    address: Mapped[str] = mapped_column()
-    user_id: Mapped[int] = Column(Integer, ForeignKey("user.id"))
+    challenge_code: Mapped[int] = mapped_column()
+    status: Mapped[str] = mapped_column(String(30))
 
 
 if __name__ == '__main__':
@@ -152,32 +76,75 @@ if __name__ == '__main__':
     Base.metadata.create_all(engine)
 
     with create_session() as session:
-        user = User(username="user", role_type="simple")
-        user.set_password("user")
-        user.save(session)
+        user_table = openpyxl.load_workbook("db/import/user_import.xlsx")
 
-        categories = [
-            Category(
-                title=f"Title {i}",
-                description=f"Description {i}"
-            )
-            for i in range(1, 6)
-        ]
-        session.add_all(categories)
+        user_sheet = user_table.active
 
-        products = [
-            Product(
-                title=f"Title {i}",
-                description=f"Description {i}",
-                price=random.randint(1000, 10000),
-                quantity=random.randint(1, 10),
-                supplier=f"Supplier {i}",
-                producer=f"Producer {i}",
-                measure_type="pack",
-                category=random.choice(categories),
-                image_url=f"{app_settings.root}/assets/images/image{random.randint(1, 3)}.webp",
-                discount=random.choice([None, round(random.uniform(15, 30), random.randint(0, 2))])
+        user_data = {
+            str(row[1].value): User(
+                role=str(row[0].value),
+                name=str(row[1].value),
+                login=str(row[2].value),
+                password=str(row[3].value),
             )
-            for i in range(1, 11)
+            for row in list(user_sheet.iter_rows())[1:] if row[0].value is not None
+        }
+        session.add_all(user_data.values())
+
+        delivery_table = openpyxl.load_workbook("db/import/Пункты выдачи_import.xlsx")
+
+        delivery_sheet = delivery_table.active
+
+        delivery_data = [
+            Delivery(
+                id=i + 1,
+                address = str(row[0].value)
+            )
+            for i, row in enumerate(list(delivery_sheet.iter_rows())[1:])  if row[0].value is not None
         ]
-        session.add_all(products)
+        session.add_all(delivery_data)
+
+
+        order_table = openpyxl.load_workbook("db/import/Заказ_import.xlsx")
+
+        order_sheet = order_table.active
+        filtered_user_data = {k: v for k, v in user_data.items() if v.role == "Авторизированный клиент"}
+
+        order_data = [
+            Order(
+                id=int(row[0].value),
+                article=str(row[1].value),
+                order_date=f(str(row[2].value)),
+                delivery_date=str(row[3].value),
+                address_id=int(row[4].value),
+                user=filtered_user_data.get(str(row[5].value)),
+                challenge_code=int(row[6].value),
+                status=str(row[7].value)
+            )
+            for row in list(order_sheet.iter_rows())[1:]  if row[0].value is not None
+        ]
+        session.add_all(order_data)
+
+
+
+        # products_table = openpyxl.load_workbook("db/import/Tovar.xlsx")
+
+        # products_sheet = products_table.active
+
+        # products_data = [
+        #     Product(
+        #         article=str(row[0].value),
+        #         title=str(row[1].value),
+        #         measure_type=str(row[2].value),
+        #         price=float(row[3].value),
+        #         supplier=str(row[4].value),
+        #         producer=str(row[5].value),
+        #         category=str(row[6].value),
+        #         discount=float(row[7].value),
+        #         quantity=int(row[8].value),
+        #         description=str(row[9].value),
+        #         image_url=f"{app_settings.root}/assets/images/{str(row[10])}",
+        #     )
+        #     for row in list(products_sheet.iter_rows())[1:] if row[0].value is not None
+        # ]
+        # session.add_all(products_data)
