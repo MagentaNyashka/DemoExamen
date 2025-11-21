@@ -1,186 +1,154 @@
-import base64
-import hashlib
-import random
-from datetime import datetime
-from enum import StrEnum
 import openpyxl
-
-from sqlalchemy import ARRAY, Integer, Column, ForeignKey, String, Float, Date, UniqueConstraint, text, CheckConstraint
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-
-from db.base import Base
-from db.connection import engine, create_session
-from settings import app_settings
+from datetime import datetime
+from sqlalchemy import MetaData, insert, text
+from db.connection import engine
 from settings import app_settings
 
 
-def f(string: str):
-            string = string.split()[0]
-            try:
-                return datetime.strptime(string, "%Y-%m-%d")
-            except Exception:
-                return datetime.strptime(string, "%m/%d/%Y")
+def parse_date(value):
+    if value is None:
+        return None
+    s = str(value).split()[0]
+    for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%d.%m.%Y"):
+        try:
+            return datetime.strptime(s, fmt).date()
+        except:
+            pass
+    raise ValueError(f"Unknown date format: {value}")
 
-class User(Base):
-    __tablename__ = "User"
-
-    __table_args__ = (UniqueConstraint('name', 'role'),)
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    role: Mapped[str] = mapped_column(String(30))
-    name: Mapped[str] = mapped_column(String(50))
-    login: Mapped[str] = mapped_column(String(50))
-    password: Mapped[str] = mapped_column(String(50))
-    orders = relationship("Order", back_populates="user", uselist=True)
-
-class Product(Base):
-    __tablename__ = "Product"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    article: Mapped[str] = mapped_column(String(), unique=True)
-    title: Mapped[str] = mapped_column(String(30))
-    measure_type: Mapped[str] = mapped_column(String(30))
-    price: Mapped[float] = mapped_column(Float)
-    supplier: Mapped[str] = mapped_column(String(30))
-    producer: Mapped[str] = mapped_column(String(30))
-    category: Mapped[str] = mapped_column(String(30))
-    discount: Mapped[float] = mapped_column(Float)
-    quantity: Mapped[int] = mapped_column()
-    description: Mapped[str] = mapped_column(String(1024))
-    image_url: Mapped[str] = mapped_column(String(100))
-
-class Delivery(Base):
-    __tablename__ = "Delivery"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    address: Mapped[str] = mapped_column(String(256))
-
-class Order(Base):
-    __tablename__ = "Order"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    order_date: Mapped[Date] = mapped_column(Date)
-    delivery_date: Mapped[Date] = mapped_column(Date)
-    address_id: Mapped[int] = mapped_column(ForeignKey("Delivery.id"))
-    user_id: Mapped[int] = mapped_column(ForeignKey("User.id"), nullable=True)
-    user = relationship(User, back_populates="orders")
-    challenge_code: Mapped[int] = mapped_column()
-    status: Mapped[str] = mapped_column(String(30))
-
-class OrderItem(Base):
-     __tablename__ = "OrderItem"
-
-     id: Mapped[int] = mapped_column(primary_key=True)
-     article: Mapped[str] = mapped_column(ForeignKey("Product.article"))
-     order: Mapped[int] = mapped_column(ForeignKey("Order.id"))
-     quantity: Mapped[int] = mapped_column()
 
 def normalize_article(data: str):
     raw = [x.strip() for x in data.split(',')]
     articles = []
-    quantity = []
+    quantities = []
 
     for i in range(0, len(raw), 2):
         articles.append(raw[i])
-        quantity.append(int(raw[i+1]))
+        quantities.append(int(raw[i+1]))
 
-    return articles, quantity
+    return articles, quantities
 
 
-if __name__ == '__main__':
-    with engine.connect() as conn:
-        for table in Base.metadata.tables:
-            conn.execute(text(f"DROP TABLE IF EXISTS \"{table}\" CASCADE"))
-        conn.commit()
-    Base.metadata.create_all(engine)
+# -----------------------------
+#      REFLECT TABLES
+# -----------------------------
+metadata = MetaData()
+metadata.reflect(bind=engine)
 
-    with create_session() as session:
-        user_table = openpyxl.load_workbook("db/import/user_import.xlsx")
+User = metadata.tables["User"]
+Delivery = metadata.tables["Delivery"]
+Product = metadata.tables["Product"]
+Order = metadata.tables["Order"]
+OrderItem = metadata.tables["OrderItem"]
 
-        user_sheet = user_table.active
 
-        user_data = {
-            str(row[1].value): User(
-                role=str(row[0].value),
-                name=str(row[1].value),
-                login=str(row[2].value),
-                password=str(row[3].value),
-            )
-            for row in list(user_sheet.iter_rows())[1:] if row[0].value is not None
+if __name__ == "__main__":
+
+    # -----------------------------
+    #       IMPORT USERS
+    # -----------------------------
+    user_table = openpyxl.load_workbook("db/import/user_import.xlsx").active
+
+    user_rows = [
+        {
+            "role": str(row[0].value),
+            "name": str(row[1].value),
+            "login": str(row[2].value),
+            "password": str(row[3].value),
         }
-        session.add_all(user_data.values())
+        for row in user_table.iter_rows(min_row=2)
+        if row[0].value is not None
+    ]
 
-        delivery_table = openpyxl.load_workbook("db/import/Пункты выдачи_import.xlsx")
+    with engine.begin() as conn:
+        conn.execute(insert(User), user_rows)
 
-        delivery_sheet = delivery_table.active
+    # Кэш для связи заказ → user_id
+    with engine.connect() as conn:
+        user_map = dict(conn.execute(text('SELECT name, id FROM "User"')).fetchall())
 
-        delivery_data = [
-            Delivery(
-                id=i + 1,
-                address = str(row[0].value)
-            )
-            for i, row in enumerate(list(delivery_sheet.iter_rows())[1:])  if row[0].value is not None
-        ]
-        session.add_all(delivery_data)
+    # -----------------------------
+    #       IMPORT DELIVERY
+    # -----------------------------
+    delivery_table = openpyxl.load_workbook("db/import/Пункты выдачи_import.xlsx").active
 
+    delivery_rows = [
+        {"id": i + 1, "address": str(row[0].value)}
+        for i, row in enumerate(delivery_table.iter_rows(min_row=2))
+        if row[0].value is not None
+    ]
 
-        products_table = openpyxl.load_workbook("db/import/Tovar.xlsx")
+    with engine.begin() as conn:
+        conn.execute(insert(Delivery), delivery_rows)
 
-        products_sheet = products_table.active
+    # -----------------------------
+    #       IMPORT PRODUCTS
+    # -----------------------------
+    products_table = openpyxl.load_workbook("db/import/Tovar.xlsx").active
 
-        products_data = [
-            Product(
-                article=str(row[0].value),
-                title=str(row[1].value),
-                measure_type=str(row[2].value),
-                price=float(row[3].value),
-                supplier=str(row[4].value),
-                producer=str(row[5].value),
-                category=str(row[6].value),
-                discount=float(row[7].value),
-                quantity=int(row[8].value),
-                description=str(row[9].value),
-                image_url=f"{app_settings.root}/assets/images/{str(row[10])}",
-            )
-            for row in list(products_sheet.iter_rows())[1:] if row[0].value is not None
-        ]
-        session.add_all(products_data)
-        session.commit()
+    products_rows = [
+        {
+            "article": str(row[0].value),
+            "title": str(row[1].value),
+            "measure_type": str(row[2].value),
+            "price": float(row[3].value),
+            "supplier": str(row[4].value),
+            "producer": str(row[5].value),
+            "category": str(row[6].value),
+            "discount": float(row[7].value),
+            "quantity": int(row[8].value),
+            "description": str(row[9].value),
+            "image_url": f"{app_settings.root}/assets/images/{str(row[10].value)}",
+        }
+        for row in products_table.iter_rows(min_row=2)
+        if row[0].value is not None
+    ]
 
-        order_table = openpyxl.load_workbook("db/import/Заказ_import.xlsx")
+    with engine.begin() as conn:
+        conn.execute(insert(Product), products_rows)
 
-        order_sheet = order_table.active
-        filtered_user_data = {k: v for k, v in user_data.items() if v.role == "Авторизированный клиент"}
+    # -----------------------------
+    #         IMPORT ORDERS
+    # -----------------------------
+    order_table = openpyxl.load_workbook("db/import/Заказ_import.xlsx").active
 
-        order_data = [
-            Order(
-                id=int(row[0].value),
-                order_date=f(str(row[2].value)),
-                delivery_date=str(row[3].value),
-                address_id=int(row[4].value),
-                user=filtered_user_data.get(str(row[5].value)),
-                challenge_code=int(row[6].value),
-                status=str(row[7].value)
-            )
-            for row in list(order_sheet.iter_rows())[1:]  if row[0].value is not None
-        ]
-        session.add_all(order_data)
-        session.commit()
+    orders_rows = []
+    order_item_rows = []
 
-        order_item_data = []
-        for row in list(order_sheet.iter_rows())[1:]:
-            if row[0].value is not None:
-                article_cell = str(row[1].value)
-                articles, quantities = normalize_article(article_cell)
-                for i in range(0, len(articles)):
-                    order_item_data.append(OrderItem(
-                        order=int(row[0].value),
-                        article=articles[i],
-                        quantity=quantities[i]
-                ))
-            else:
-                break
+    for row in order_table.iter_rows(min_row=2, values_only=True):
+        if row[0] is None:
+            continue
 
-        session.add_all(order_item_data)
-        session.commit()
+        order_id = int(row[0])
+        article_raw = str(row[1])
+        order_date = parse_date(row[2])
+        delivery_date = parse_date(row[3])
+        address_id = int(row[4])
+        user_name = str(row[5])
+        user_id = user_map.get(user_name)  # может быть None
+        challenge = int(row[6])
+        status = str(row[7])
 
+        # создаём запись заказа
+        orders_rows.append({
+            "id": order_id,
+            "order_date": order_date,
+            "delivery_date": delivery_date,
+            "address_id": address_id,
+            "user_id": user_id,
+            "challenge_code": challenge,
+            "status": status
+        })
+
+        # создаём позиции заказа
+        articles, quantities = normalize_article(article_raw)
+        for a, q in zip(articles, quantities):
+            order_item_rows.append({
+                "order": order_id,
+                "article": a,
+                "quantity": q
+            })
+
+    with engine.begin() as conn:
+        conn.execute(insert(Order), orders_rows)
+        conn.execute(insert(OrderItem), order_item_rows)
