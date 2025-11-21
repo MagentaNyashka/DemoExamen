@@ -15,9 +15,7 @@ class DBSettings(BaseSettings):
 
     @property
     def url(self):
-        return "postgresql+psycopg2://{}:{}@{}:{}/{}".format(
-            self.user, self.password, self.host, self.port, self.name
-        )
+        return f"postgresql+psycopg2://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
 
 
 class AppSettings(BaseSettings):

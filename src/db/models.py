@@ -43,6 +43,12 @@ OrderItem = metadata.tables["OrderItem"]
 
 
 if __name__ == "__main__":
+    # -----------------------------
+    #       TRUNCATE TABLES
+    # -----------------------------
+    with engine.begin() as conn:
+        conn.execute(text('TRUNCATE "OrderItem" CASCADE; TRUNCATE "Order" CASCADE; TRUNCATE "Product" CASCADE; TRUNCATE "User" CASCADE; TRUNCATE "Delivery" CASCADE'))
+
 
     # -----------------------------
     #       IMPORT USERS
@@ -65,7 +71,10 @@ if __name__ == "__main__":
 
     # Кэш для связи заказ → user_id
     with engine.connect() as conn:
-        user_map = dict(conn.execute(text('SELECT name, id FROM "User"')).fetchall())
+    #    user_map = dict(conn.execute(text("SELECT name, id FROM \"User\" WHERE role = 'Авторизированный клиент';")).fetchall())
+        user_map = dict(conn.execute(text("SELECT name, id FROM \"User\";")).fetchall())
+
+
 
     # -----------------------------
     #       IMPORT DELIVERY
@@ -118,6 +127,7 @@ if __name__ == "__main__":
     for row in order_table.iter_rows(min_row=2, values_only=True):
         if row[0] is None:
             continue
+
 
         order_id = int(row[0])
         article_raw = str(row[1])
