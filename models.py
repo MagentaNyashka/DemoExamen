@@ -1,8 +1,16 @@
 import openpyxl
 from datetime import datetime
-from sqlalchemy import MetaData, insert, text
-from db.connection import engine
-from settings import app_settings
+from sqlalchemy import create_engine, MetaData, insert, text
+
+
+host = "localhost"
+port = 5432
+db = "demo"
+user = "postgres"
+password = "Bghujknmol123"
+echo = False
+
+engine = create_engine(f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{db}", echo=echo)
 
 
 def parse_date(value):
@@ -53,7 +61,7 @@ if __name__ == "__main__":
     # -----------------------------
     #       IMPORT USERS
     # -----------------------------
-    user_table = openpyxl.load_workbook("db/import/user_import.xlsx").active
+    user_table = openpyxl.load_workbook("import/user_import.xlsx").active
 
     user_rows = [
         {
@@ -71,15 +79,16 @@ if __name__ == "__main__":
 
     # Кэш для связи заказ → user_id
     with engine.connect() as conn:
-    #    user_map = dict(conn.execute(text("SELECT name, id FROM \"User\" WHERE role = 'Авторизированный клиент';")).fetchall())
-        user_map = dict(conn.execute(text("SELECT name, id FROM \"User\";")).fetchall())
+       user_map = dict(conn.execute(text("SELECT name, id FROM \"User\" WHERE role <> 'Авторизированный клиент';")).fetchall())
+       print(user_map)
+        # user_map = dict(conn.execute(text("SELECT name, id FROM \"User\";")).fetchall())
 
 
 
     # -----------------------------
     #       IMPORT DELIVERY
     # -----------------------------
-    delivery_table = openpyxl.load_workbook("db/import/Пункты выдачи_import.xlsx").active
+    delivery_table = openpyxl.load_workbook("import/Пункты выдачи_import.xlsx").active
 
     delivery_rows = [
         {"id": i + 1, "address": str(row[0].value)}
@@ -93,7 +102,7 @@ if __name__ == "__main__":
     # -----------------------------
     #       IMPORT PRODUCTS
     # -----------------------------
-    products_table = openpyxl.load_workbook("db/import/Tovar.xlsx").active
+    products_table = openpyxl.load_workbook("import/Tovar.xlsx").active
 
     products_rows = [
         {
@@ -107,7 +116,7 @@ if __name__ == "__main__":
             "discount": float(row[7].value),
             "quantity": int(row[8].value),
             "description": str(row[9].value),
-            "image_url": f"{app_settings.root}/assets/images/{str(row[10].value)}",
+            "image_url": f"import/{str(row[10].value)}",
         }
         for row in products_table.iter_rows(min_row=2)
         if row[0].value is not None
@@ -119,7 +128,7 @@ if __name__ == "__main__":
     # -----------------------------
     #         IMPORT ORDERS
     # -----------------------------
-    order_table = openpyxl.load_workbook("db/import/Заказ_import.xlsx").active
+    order_table = openpyxl.load_workbook("import/Заказ_import.xlsx").active
 
     orders_rows = []
     order_item_rows = []
