@@ -136,16 +136,18 @@ if __name__ == "__main__":
         if row[0] is None:
             continue
 
-
-        order_id = int(row[0])
-        article_raw = str(row[1])
-        order_date = parse_date(row[2])
-        delivery_date = parse_date(row[3])
-        address_id = int(row[4])
-        user_name = str(row[5])
-        user_id = user_map.get(user_name)  # может быть None
-        challenge = int(row[6])
-        status = str(row[7])
+        try:
+            order_id = int(row[0])
+            article_raw = str(row[1])
+            order_date = parse_date(row[2])
+            delivery_date = parse_date(row[3])
+            address_id = int(row[4])
+            user_name = str(row[5])
+            user_id = user_map.get(user_name)
+            challenge = int(row[6])
+            status = str(row[7])
+        except:
+            continue
 
         # создаём запись заказа
         orders_rows.append({
