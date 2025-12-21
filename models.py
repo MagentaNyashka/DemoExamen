@@ -80,7 +80,6 @@ if __name__ == "__main__":
     # Кэш для связи заказ → user_id
     with engine.connect() as conn:
        user_map = dict(conn.execute(text("SELECT name, id FROM \"User\" WHERE role <> 'Авторизированный клиент';")).fetchall())
-       print(user_map)
         # user_map = dict(conn.execute(text("SELECT name, id FROM \"User\";")).fetchall())
 
 
@@ -116,7 +115,7 @@ if __name__ == "__main__":
             "discount": float(row[7].value),
             "quantity": int(row[8].value),
             "description": str(row[9].value),
-            "image_url": f"import/{str(row[10].value)}",
+            "image_url": f"import/{row[10].value}" if row[10].value is not None else "import/picture.png",
         }
         for row in products_table.iter_rows(min_row=2)
         if row[0].value is not None
