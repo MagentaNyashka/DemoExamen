@@ -3,6 +3,54 @@ from sqlalchemy import select, and_
 from models import engine, Product, User
 import sys
 
+class LoginWindow(QtWidgets.QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.mainWindow = MainWindow(self)
+
+        central_widget = QtWidgets.QWidget()
+        self.setCentralWidget(central_widget)
+
+        layout = QtWidgets.QVBoxLayout(central_widget)
+
+        self.login_input = QtWidgets.QTextEdit("Введите логин")
+        self.password_input = QtWidgets.QTextEdit("Введите пароль")
+        self.login_error = QtWidgets.QLabel()
+        self.login_btn = QtWidgets.QPushButton("Войти")
+        self.guest_btn = QtWidgets.QPushButton("Войти как гость")
+
+        self.login_btn.clicked.connect(self.login)
+        self.guest_btn.clicked.connect(self.close)
+
+        layout.addWidget(self.login_input)
+        layout.addWidget(self.password_input)
+        layout.addWidget(self.login_error)
+        layout.addWidget(self.login_btn)
+        layout.addWidget(self.guest_btn)
+
+
+        central_widget.setLayout(layout)
+
+    def close(self):
+        self.hide()
+        self.mainWindow.show()
+    def login(self):
+        global user
+        login = self.login_input.toPlainText()
+        password = self.password_input.toPlainText()
+        with engine.begin() as conn:
+            result = conn.execute(select(User).where(and_(User.c.login == login, User.c.password == password))).fetchall()
+        print(result)
+        if len(result) > 0:
+            self.close()
+        else:
+            self.login_error.setText(
+                '<span style="color:red;">Ошибка: неверное имя пользователя или пароль</span>'
+            )
+            self.login_error.setWordWrap(True)
+
+
 class ProductWidget(QtWidgets.QWidget):
     def __init__(self, product):
         super().__init__()
@@ -38,8 +86,10 @@ class ProductWidget(QtWidgets.QWidget):
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self):
+    def __init__(self, win: LoginWindow):
         super().__init__()
+
+        self.enterWindow = win
 
         central_widget = QtWidgets.QWidget()
         self.setCentralWidget(central_widget)
@@ -64,49 +114,19 @@ class MainWindow(QtWidgets.QMainWindow):
         for product in products:
             self.add_product(product)
 
+        self.back_btn = QtWidgets.QPushButton("Выход")
+        self.back_btn.clicked.connect(self.back)
+
+        main_layout.addWidget(self.back_btn)
+
+
     def add_product(self, product):
         self.layout.addWidget(ProductWidget(product))
 
-        
-
-class LoginWindow(QtWidgets.QMainWindow):
-    def __init__(self):
-        super().__init__()
-
-        self.mainWindow = MainWindow()
-
-        central_widget = QtWidgets.QWidget()
-        self.setCentralWidget(central_widget)
-
-        layout = QtWidgets.QVBoxLayout(central_widget)
-
-        self.login_input = QtWidgets.QTextEdit("Введите логин")
-        self.password_input = QtWidgets.QTextEdit("Введите пароль")
-        self.login_btn = QtWidgets.QPushButton("Войти")
-        self.guest_btn = QtWidgets.QPushButton("Войти как гость")
-
-        self.login_btn.clicked.connect(self.login)
-        self.guest_btn.clicked.connect(self.close)
-
-        layout.addWidget(self.login_input)
-        layout.addWidget(self.password_input)
-        layout.addWidget(self.login_btn)
-        layout.addWidget(self.guest_btn)
-
-
-        central_widget.setLayout(layout)
-
-    def close(self):
+    def back(self):
         self.hide()
-        self.mainWindow.show()
-    def login(self):
-        global user
-        login = self.login_input.toPlainText()
-        password = self.password_input.toPlainText()
-        with engine.begin() as conn:
-            result = conn.execute(select(User).where(and_(User.c.login == login, User.c.password == password))).fetchall()
-        if len(result) > 0:
-            self.close()
+        self.enterWindow.show()
+
 
 
 
