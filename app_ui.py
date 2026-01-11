@@ -102,19 +102,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
         current_supplier = self.filter_box.currentText()
 
-        self.filter_box.blockSignals(True)  # важно, если reload вызывается по сигналу
         self.filter_box.clear()
         self.filter_box.addItem("Все поставщики")
 
         for supplier in suppliers:
             self.filter_box.addItem(supplier[0])
 
-        # восстановление выбора
         index = self.filter_box.findText(current_supplier)
         if index != -1:
             self.filter_box.setCurrentIndex(index)
-
-        self.filter_box.blockSignals(False)
 
 
 
