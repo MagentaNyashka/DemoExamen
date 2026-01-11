@@ -3,7 +3,18 @@ from sqlalchemy import select, and_, update, or_
 from models import engine, Product, User
 import sys
 
+def Warning(message):
+    msg = QtWidgets.QMessageBox()
+    msg.setWindowTitle("Подтверждение")
+    msg.setText(message)
+    msg.setStandardButtons(
+        QtWidgets.QMessageBox.StandardButton.Ok |
+        QtWidgets.QMessageBox.StandardButton.Cancel
+    )
 
+    result = msg.exec()
+
+    return result
 
 class LoginWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -42,6 +53,81 @@ class LoginWindow(QtWidgets.QMainWindow):
         self.hide()
         self.mainWindow = MainWindow(self)
         self.mainWindow.show()
+
+class EditWindow(QtWidgets.QMainWindow):
+    saved = QtCore.pyqtSignal()
+    def __init__(self, id):
+        super().__init__()
+        uic.loadUi("./UI/edit.ui", self)
+        self.setWindowTitle("Редактирование")
+        self.setWindowIcon(QtGui.QIcon('import/Icon.ico'))
+        self.id = id
+
+        with engine.begin() as conn:
+            result = conn.execute(select(Product).where(Product.c.id == id)).fetchall()
+
+        for (
+            id,
+            article,
+            title,
+            measure_type,
+            price,
+            supplier,
+            producer,
+            category,
+            discount,
+            quantity,
+            description,
+            image_url
+        ) in result:
+            self.article_edit.setText(article)
+            self.title_edit.setText(title)
+            self.measure_type_edit.setText(measure_type)
+            self.price_edit.setText(str(price))
+            self.supplier_edit.setText(supplier)
+            self.producer_edit.setText(producer)
+            self.category_edit.setText(category)
+            self.discount_edit.setText(str(discount))
+            self.quantity_edit.setText(str(quantity))
+            self.description_edit.setText(description)
+
+            self.confirm_btn.clicked.connect(self.confirm)
+            self.cancel_btn.clicked.connect(self.cancel)
+
+    def confirm(self):
+        status = Warning("Сохранить изменения?")
+
+        if status == QtWidgets.QMessageBox.StandardButton.Ok:
+
+            if float(self.price_edit.toPlainText()) < 0:
+                Warning("Цена не может быть отрицательной")
+                return
+            if float(self.discount_edit.toPlainText()) < 0:
+                Warning("Скидка не может быть отрицательной")
+                return
+            if int(self.quantity_edit.toPlainText()) < 0:
+                Warning("Количество не может быть отрицательной")
+                return
+
+
+
+
+            with engine.begin() as conn:
+                conn.execute(update(Product).where(Product.c.id == self.id).values(article=self.article_edit.toPlainText(), 
+                                                                                   title=self.title_edit.toPlainText(),
+                                                                                   measure_type=self.measure_type_edit.toPlainText(),
+                                                                                   price=self.price_edit.toPlainText(),
+                                                                                   supplier=self.supplier_edit.toPlainText(),
+                                                                                   producer=self.producer_edit.toPlainText(),
+                                                                                   category=self.category_edit.toPlainText(),
+                                                                                   discount=self.discount_edit.toPlainText(),
+                                                                                   quantity=self.quantity_edit.toPlainText(),
+                                                                                   description=self.description_edit.toPlainText()))
+            
+            self.saved.emit()
+            self.close()
+    def cancel(self):
+        self.close()
 
 
 
@@ -141,8 +227,11 @@ class MainWindow(QtWidgets.QMainWindow):
             quantity,
             description,
             image_url
-        ) in products:
+        ) in products:     
             product = uic.loadUi("./UI/product.ui")
+
+            product.setProperty("id", id)
+            product.setProperty("article", article)
 
             product.title.setText(f"<b>{title}</b>")
             product.category.setText(f"<b>{category}</b>")
@@ -175,8 +264,24 @@ class MainWindow(QtWidgets.QMainWindow):
             pixmap = QtGui.QPixmap(image_url)
             product.photo.setPixmap(pixmap.scaled(300,200))
 
+            product.mousePressEvent = lambda event, w=product: self.product_clicked(event, w)
+
             product_layout.addWidget(product)
 
+    def product_clicked(self, event, product):
+        if event.button() != QtCore.Qt.MouseButton.LeftButton:
+            return
+        
+        if user == "user":
+            return
+
+        id = product.property("id")
+
+
+        self.editWindow = EditWindow(id=id)
+        self.editWindow.saved.connect(self.reload_products)
+        self.editWindow.show()
+        
 
 
 if __name__ == "__main__":

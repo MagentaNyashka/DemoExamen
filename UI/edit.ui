@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>782</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <widget class="QTextEdit" name="article_edit"/>
+    </item>
+    <item>
+     <widget class="QTextEdit" name="title_edit"/>
+    </item>
+    <item>
+     <widget class="QTextEdit" name="measure_type_edit"/>
+    </item>
+    <item>
+     <widget class="QTextEdit" name="price_edit"/>
+    </item>
+    <item>
+     <widget class="QTextEdit" name="supplier_edit"/>
+    </item>
+    <item>
+     <widget class="QTextEdit" name="producer_edit"/>
+    </item>
+    <item>
+     <widget class="QTextEdit" name="category_edit"/>
+    </item>
+    <item>
+     <widget class="QTextEdit" name="discount_edit"/>
+    </item>
+    <item>
+     <widget class="QTextEdit" name="quantity_edit"/>
+    </item>
+    <item>
+     <widget class="QTextEdit" name="description_edit"/>
+    </item>
+    <item>
+     <widget class="QPushButton" name="confirm_btn">
+      <property name="text">
+       <string>Сохранить</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="cancel_btn">
+      <property name="text">
+       <string>Отменить</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
