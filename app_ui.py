@@ -13,7 +13,6 @@ class LoginWindow(QtWidgets.QMainWindow):
         self.login_btn.clicked.connect(self.login)
         self.guest_btn.clicked.connect(self.guest_login)
 
-        global user
 
     def login(self):
         login = self.login_edit.toPlainText()
@@ -25,6 +24,7 @@ class LoginWindow(QtWidgets.QMainWindow):
         if len(result) > 0:
             
             if(result[0][1] == "Администратор" or result[0][1] == "Менеджер"):
+                global user
                 user = "admin"
                 
                 self.hide()
@@ -35,6 +35,7 @@ class LoginWindow(QtWidgets.QMainWindow):
             self.login_error.setText("Ошибка входа")
 
     def guest_login(self):
+        global user
         user = "user"
         self.hide()
         self.mainWindow = MainWindow(self)
@@ -49,6 +50,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.sort = 0
         self.win = win
+
+        if user == "user":
+            self.sort_btn.hide()
+            self.search_field.hide()
+            self.filter_box.hide()
+
+
         self.logout_btn.clicked.connect(self.logout)
 
         self.filter_box.activated.connect(self.reload_products)
