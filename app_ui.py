@@ -9,6 +9,8 @@ class LoginWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         uic.loadUi("./UI/login.ui", self)
+        self.setWindowTitle("Окно входа")
+        self.setWindowIcon(QtGui.QIcon('import/Icon.ico'))
 
         self.login_btn.clicked.connect(self.login)
         self.guest_btn.clicked.connect(self.guest_login)
@@ -47,6 +49,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, win: LoginWindow):
         super().__init__()
         uic.loadUi("./UI/main.ui", self)
+        self.setWindowTitle("Каталог")
+        self.setWindowIcon(QtGui.QIcon('import/Icon.ico'))
 
         self.sort = 0
         self.win = win
