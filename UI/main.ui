@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>344</height>
+    <height>363</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -52,11 +52,18 @@
          <x>0</x>
          <y>0</y>
          <width>780</width>
-         <height>144</height>
+         <height>69</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="product_layout"/>
       </widget>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="add_btn">
+      <property name="text">
+       <string>Добавить товар</string>
+      </property>
      </widget>
     </item>
     <item>

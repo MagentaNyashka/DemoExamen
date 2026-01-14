@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>782</height>
+    <height>800</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,34 +16,234 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_2">
     <item>
-     <widget class="QTextEdit" name="article_edit"/>
+     <widget class="QLabel" name="article">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>20</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Артикул</string>
+      </property>
+     </widget>
     </item>
     <item>
-     <widget class="QTextEdit" name="title_edit"/>
+     <widget class="QTextEdit" name="article_edit">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>20</height>
+       </size>
+      </property>
+     </widget>
     </item>
     <item>
-     <widget class="QTextEdit" name="measure_type_edit"/>
+     <widget class="QLabel" name="title">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>20</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Название</string>
+      </property>
+     </widget>
     </item>
     <item>
-     <widget class="QTextEdit" name="price_edit"/>
+     <widget class="QTextEdit" name="title_edit">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>20</height>
+       </size>
+      </property>
+     </widget>
     </item>
     <item>
-     <widget class="QTextEdit" name="supplier_edit"/>
+     <widget class="QLabel" name="measure_type">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>20</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Единица измерения</string>
+      </property>
+     </widget>
     </item>
     <item>
-     <widget class="QTextEdit" name="producer_edit"/>
+     <widget class="QTextEdit" name="measure_type_edit">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>20</height>
+       </size>
+      </property>
+     </widget>
     </item>
     <item>
-     <widget class="QTextEdit" name="category_edit"/>
+     <widget class="QLabel" name="price">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>20</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Цена</string>
+      </property>
+     </widget>
     </item>
     <item>
-     <widget class="QTextEdit" name="discount_edit"/>
+     <widget class="QTextEdit" name="price_edit">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>20</height>
+       </size>
+      </property>
+     </widget>
     </item>
     <item>
-     <widget class="QTextEdit" name="quantity_edit"/>
+     <widget class="QLabel" name="supplier">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>20</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Поставщик</string>
+      </property>
+     </widget>
     </item>
     <item>
-     <widget class="QTextEdit" name="description_edit"/>
+     <widget class="QTextEdit" name="supplier_edit">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>20</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="producer">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>20</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Производитель</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QTextEdit" name="producer_edit">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>20</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="category">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>20</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Категория</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QTextEdit" name="category_edit">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>20</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="discount">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>20</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Скидка</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QTextEdit" name="discount_edit">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>20</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="quantity">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>20</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Количество</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QTextEdit" name="quantity_edit">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>20</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="description">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>20</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Описание</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QTextEdit" name="description_edit">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>80</height>
+       </size>
+      </property>
+     </widget>
     </item>
     <item>
      <widget class="QPushButton" name="confirm_btn">
@@ -56,6 +256,13 @@
      <widget class="QPushButton" name="cancel_btn">
       <property name="text">
        <string>Отменить</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="delete_btn">
+      <property name="text">
+       <string>Удалить</string>
       </property>
      </widget>
     </item>
