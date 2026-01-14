@@ -6,6 +6,8 @@ import sys
 import shutil
 import os
 
+user = None
+
 def Warning(message):
     msg = QtWidgets.QMessageBox()
     msg.setWindowTitle("Подтверждение")
@@ -38,7 +40,7 @@ class LoginWindow(QtWidgets.QMainWindow):
             result = conn.execute(select(User).where(and_(User.c.login == login, User.c.password == password))).fetchall()
 
         if len(result) > 0:
-            global user
+            # global user
             
             if(result[0][1] == "Администратор" or result[0][1] == "Менеджер"):
                 user = "admin"
@@ -53,7 +55,7 @@ class LoginWindow(QtWidgets.QMainWindow):
             self.login_error.setText("Ошибка входа")
 
     def guest_login(self):
-        global user
+        # global user
         user = "user"
         self.hide()
         self.mainWindow = MainWindow(self)
@@ -67,6 +69,11 @@ class EditWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Редактирование")
         self.setWindowIcon(QtGui.QIcon('import/Icon.ico'))
         self.id = id
+
+        if user != "admin":
+            self.image_url.hide()
+            self.image_url_edit.hide()
+
 
         if self.id != -1:
             with engine.begin() as conn:
