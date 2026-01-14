@@ -3,6 +3,8 @@ from PyQt6 import QtWidgets, QtGui, QtCore, uic
 from sqlalchemy import delete, insert, select, and_, update, or_
 from models import engine, Product, User, OrderItem
 import sys
+import shutil
+import os
 
 def Warning(message):
     msg = QtWidgets.QMessageBox()
@@ -94,6 +96,7 @@ class EditWindow(QtWidgets.QMainWindow):
                 self.discount_edit.setText(str(discount))
                 self.quantity_edit.setText(str(quantity))
                 self.description_edit.setText(description)
+                self.image_url_edit.setText(os.path.abspath(image_url))
 
         else:
             self.delete_btn.hide()
@@ -123,6 +126,22 @@ class EditWindow(QtWidgets.QMainWindow):
 
             with engine.begin() as conn:
                 try:
+                    image = self.image_url_edit.toPlainText()
+                    if(image == ""):
+                        image = "import/picture.png"
+                    else:
+                        try:
+                            name = image.split("/")
+
+                            base_dir = os.path.dirname(os.path.abspath(__file__))
+                            import_dir = os.path.join(base_dir, "import/")
+
+                            full_path = import_dir+name[-1]
+
+                            shutil.copyfile(image, full_path)
+                            image = full_path
+                        except Exception:
+                            Warning("Неверный путь до изображения")
                     if self.id != -1:
                         conn.execute(update(Product).where(Product.c.id == self.id).values(article=self.article_edit.toPlainText(), 
                                                                                    title=self.title_edit.toPlainText(),
@@ -133,7 +152,8 @@ class EditWindow(QtWidgets.QMainWindow):
                                                                                    category=self.category_edit.toPlainText(),
                                                                                    discount=self.discount_edit.toPlainText(),
                                                                                    quantity=self.quantity_edit.toPlainText(),
-                                                                                   description=self.description_edit.toPlainText()))
+                                                                                   description=self.description_edit.toPlainText(),
+                                                                                   image_url=image))
                     else:
                         conn.execute(insert(Product).values(article=self.article_edit.toPlainText(), 
                                                                                    title=self.title_edit.toPlainText(),
@@ -145,7 +165,7 @@ class EditWindow(QtWidgets.QMainWindow):
                                                                                    discount=self.discount_edit.toPlainText(),
                                                                                    quantity=self.quantity_edit.toPlainText(),
                                                                                    description=self.description_edit.toPlainText(),
-                                                                                   image_url="import/picture.png"))
+                                                                                   image_url=image))
                 except Exception:
                     traceback.print_exc() 
                     Warning("Данный товар фигурирует в заказе. Отмена")
@@ -162,7 +182,14 @@ class EditWindow(QtWidgets.QMainWindow):
         if status == QtWidgets.QMessageBox.StandardButton.Ok:
             with engine.begin() as conn:
                 try:
+                    product = conn.execute(select(Product).where(Product.c.id == self.id)).fetchall()
+
                     conn.execute(delete(Product).where(Product.c.id == self.id))
+
+                    image = product[0][11]
+                    name = image.split("/")[-1]
+                    if name != "picture.png":
+                        os.remove(image)
                 except Exception:
                     Warning("Данный товар фигурирует в заказе. Отмена")
                     return

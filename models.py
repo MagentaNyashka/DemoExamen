@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, MetaData, insert, text
 host = "localhost"
 port = 5432
 db = "demo"
-user = "postgres"
+user = "psychoslvt"
 password = "Bghujknmol123"
 echo = False
 
