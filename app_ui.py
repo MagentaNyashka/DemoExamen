@@ -33,6 +33,8 @@ class LoginWindow(QtWidgets.QMainWindow):
 
 
     def login(self):
+        global user
+        
         login = self.login_edit.toPlainText()
         password = self.password_edit.toPlainText()
 
@@ -42,11 +44,13 @@ class LoginWindow(QtWidgets.QMainWindow):
         if len(result) > 0:
             # global user
             
-            if(result[0][1] == "Администратор" or result[0][1] == "Менеджер"):
+            if(result[0][1] == "Администратор"):
                 user = "admin"
             elif(result[0][1] == "Менеджер"):
                 user = "manager"
             
+            print(user)
+
             self.hide()
             self.mainWindow = MainWindow(self)
             self.mainWindow.show()
@@ -55,6 +59,7 @@ class LoginWindow(QtWidgets.QMainWindow):
             self.login_error.setText("Ошибка входа")
 
     def guest_login(self):
+        global user
         # global user
         user = "user"
         self.hide()
@@ -69,6 +74,8 @@ class EditWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("Редактирование")
         self.setWindowIcon(QtGui.QIcon('import/Icon.ico'))
         self.id = id
+
+        print(user)
 
         if user != "admin":
             self.image_url.hide()
