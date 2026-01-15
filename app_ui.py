@@ -34,7 +34,7 @@ class LoginWindow(QtWidgets.QMainWindow):
 
     def login(self):
         global user
-        
+
         login = self.login_edit.toPlainText()
         password = self.password_edit.toPlainText()
 
@@ -49,7 +49,7 @@ class LoginWindow(QtWidgets.QMainWindow):
             elif(result[0][1] == "Менеджер"):
                 user = "manager"
             
-            print(user)
+            # print(user)
 
             self.hide()
             self.mainWindow = MainWindow(self)
@@ -75,7 +75,7 @@ class EditWindow(QtWidgets.QMainWindow):
         self.setWindowIcon(QtGui.QIcon('import/Icon.ico'))
         self.id = id
 
-        print(user)
+        # print(user)
 
         if user != "admin":
             self.image_url.hide()
@@ -110,7 +110,7 @@ class EditWindow(QtWidgets.QMainWindow):
                 self.discount_edit.setText(str(discount))
                 self.quantity_edit.setText(str(quantity))
                 self.description_edit.setText(description)
-                self.image_url_edit.setText(os.path.abspath(image_url))
+                self.image_url_edit.setText(image_url)
 
         else:
             self.delete_btn.hide()
@@ -122,9 +122,9 @@ class EditWindow(QtWidgets.QMainWindow):
 
     def confirm(self):
         status = Warning("Сохранить изменения?")
-
+        
         if status == QtWidgets.QMessageBox.StandardButton.Ok:
-
+            # Проверка значений
             if float(self.price_edit.toPlainText()) < 0:
                 Warning("Цена не может быть отрицательной")
                 return
@@ -134,59 +134,111 @@ class EditWindow(QtWidgets.QMainWindow):
             if int(self.quantity_edit.toPlainText()) < 0:
                 Warning("Количество не может быть отрицательной")
                 return
-
-
-
-
+            
             with engine.begin() as conn:
                 try:
                     image = self.image_url_edit.toPlainText()
-                    if(image == ""):
-                        image = "import/picture.png"
-                    else:
-                        try:
-                            name = image.split("/")
-
-                            base_dir = os.path.dirname(os.path.abspath(__file__))
-                            import_dir = os.path.join(base_dir, "import/")
-
-                            full_path = import_dir+name[-1]
-
-                            shutil.copyfile(image, full_path)
-                            image = full_path
-                        except Exception:
-                            Warning("Неверный путь до изображения")
+                    old_image_path = None
+                    
                     if self.id != -1:
-                        conn.execute(update(Product).where(Product.c.id == self.id).values(article=self.article_edit.toPlainText(), 
-                                                                                   title=self.title_edit.toPlainText(),
-                                                                                   measure_type=self.measure_type_edit.toPlainText(),
-                                                                                   price=self.price_edit.toPlainText(),
-                                                                                   supplier=self.supplier_edit.toPlainText(),
-                                                                                   producer=self.producer_edit.toPlainText(),
-                                                                                   category=self.category_edit.toPlainText(),
-                                                                                   discount=self.discount_edit.toPlainText(),
-                                                                                   quantity=self.quantity_edit.toPlainText(),
-                                                                                   description=self.description_edit.toPlainText(),
-                                                                                   image_url=image))
+                        result = conn.execute(select(Product.c.image_url).where(Product.c.id == self.id)).fetchone()
+                        if result:
+                            old_image_path = result[0]
+                    
+                    if old_image_path != image:
+                        if image == "":
+                            image = "import/picture.png"
+                        elif not image.startswith("import/"):
+                            try:
+                                name = os.path.basename(image)
+                                base_dir = os.path.dirname(os.path.abspath(__file__))
+                                import_dir = os.path.join(base_dir, "import/")
+                                full_path = os.path.join(import_dir, name)
+
+                                if os.path.exists(full_path):
+                                    Warning("Изображение с таким названием уже есть в базе")
+                                    return
+
+                                if os.path.exists(image):
+                                    shutil.copyfile(image, full_path)
+
+                                if old_image_path != image and old_image_path != "import/picture.png":
+                                    try:
+                                        os.remove(old_image_path)
+                                    except Exception:
+                                        Warning("Ошибка при удалении старого изображения!")
+                                        return
+                                image = "import/" + name
+                            except Exception:
+                                Warning("Ошибка при добавлении изображения")
+                                return
+
+                    # if image == "":
+                    #     image = "import/picture.png"
+                    # elif not image.startswith("import/"):
+                    #     try:
+                    #         name = os.path.basename(image)
+                    #         base_dir = os.path.dirname(os.path.abspath(__file__))
+                    #         import_dir = os.path.join(base_dir, "import/")
+                    #         full_path = os.path.join(import_dir, name)
+                            
+                    #         if os.path.exists(image):
+                    #             shutil.copyfile(image, full_path)
+                                
+                    #             if old_image_path and old_image_path != image and old_image_path != "import/picture.png":
+                    #                 try:
+                    #                     if os.path.exists(old_image_path):
+                    #                         os.remove(old_image_path)
+                    #                 except Exception as e:
+                    #                     Warning(f"Ошибка при удалении старого изображения: {e}")
+                                
+                    #             image = full_path
+                    #     except Exception as e:
+                    #         Warning(f"Ошибка при копировании изображения: {str(e)}")
+                    #         return
+                    # elif old_image_path and old_image_path != image and old_image_path != "import/picture.png":
+                    #     try:
+                    #         if os.path.exists(old_image_path):
+                    #             os.remove(old_image_path)
+                    #     except Exception as e:
+                    #         Warning(f"Ошибка при удалении старого изображения: {e}")
+                    
+                    if self.id != -1:
+                        conn.execute(update(Product).where(Product.c.id == self.id).values(
+                            article=self.article_edit.toPlainText(), 
+                            title=self.title_edit.toPlainText(),
+                            measure_type=self.measure_type_edit.toPlainText(),
+                            price=self.price_edit.toPlainText(),
+                            supplier=self.supplier_edit.toPlainText(),
+                            producer=self.producer_edit.toPlainText(),
+                            category=self.category_edit.toPlainText(),
+                            discount=self.discount_edit.toPlainText(),
+                            quantity=self.quantity_edit.toPlainText(),
+                            description=self.description_edit.toPlainText(),
+                            image_url=image
+                        ))
                     else:
-                        conn.execute(insert(Product).values(article=self.article_edit.toPlainText(), 
-                                                                                   title=self.title_edit.toPlainText(),
-                                                                                   measure_type=self.measure_type_edit.toPlainText(),
-                                                                                   price=self.price_edit.toPlainText(),
-                                                                                   supplier=self.supplier_edit.toPlainText(),
-                                                                                   producer=self.producer_edit.toPlainText(),
-                                                                                   category=self.category_edit.toPlainText(),
-                                                                                   discount=self.discount_edit.toPlainText(),
-                                                                                   quantity=self.quantity_edit.toPlainText(),
-                                                                                   description=self.description_edit.toPlainText(),
-                                                                                   image_url=image))
-                except Exception:
+                        conn.execute(insert(Product).values(
+                            article=self.article_edit.toPlainText(), 
+                            title=self.title_edit.toPlainText(),
+                            measure_type=self.measure_type_edit.toPlainText(),
+                            price=self.price_edit.toPlainText(),
+                            supplier=self.supplier_edit.toPlainText(),
+                            producer=self.producer_edit.toPlainText(),
+                            category=self.category_edit.toPlainText(),
+                            discount=self.discount_edit.toPlainText(),
+                            quantity=self.quantity_edit.toPlainText(),
+                            description=self.description_edit.toPlainText(),
+                            image_url=image
+                        ))
+                except Exception as e:
                     traceback.print_exc() 
                     Warning("Данный товар фигурирует в заказе. Отмена")
                     return
-
+            
             self.saved.emit()
             self.close()
+
     def cancel(self):
         self.close()
 
