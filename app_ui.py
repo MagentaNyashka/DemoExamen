@@ -162,7 +162,7 @@ class EditWindow(QtWidgets.QMainWindow):
                                 if os.path.exists(image):
                                     shutil.copyfile(image, full_path)
 
-                                if old_image_path != image and old_image_path != "import/picture.png":
+                                if old_image_path != image and old_image_path != "import/picture.png" and self.id != -1:
                                     try:
                                         os.remove(old_image_path)
                                     except Exception:
