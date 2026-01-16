@@ -48,6 +48,8 @@ class LoginWindow(QtWidgets.QMainWindow):
                 user = "admin"
             elif(result[0][1] == "Менеджер"):
                 user = "manager"
+            else:
+                user = "user"
             
             # print(user)
 
