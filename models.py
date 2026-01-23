@@ -79,7 +79,8 @@ if __name__ == "__main__":
 
     # Кэш для связи заказ → user_id
     with engine.connect() as conn:
-       user_map = dict(conn.execute(text("SELECT name, id FROM \"User\" WHERE role <> 'Авторизированный клиент';")).fetchall())
+        user_map = dict(conn.execute(select(User.c.name, User.id).where(User.c.role != "Авторизованный клиент")).fetchall())
+    #    user_map = dict(conn.execute(text("SELECT name, id FROM \"User\" WHERE role <> 'Авторизированный клиент';")).fetchall())
         # user_map = dict(conn.execute(text("SELECT name, id FROM \"User\";")).fetchall())
 
 

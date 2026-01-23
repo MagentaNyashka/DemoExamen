@@ -174,7 +174,9 @@ class EditWindow(QtWidgets.QMainWindow):
                             except Exception:
                                 Warning("Ошибка при добавлении изображения")
                                 return
-
+                        else:
+                            Warning("Попытка присвоить изображение другого товара")
+                            return
                     # if image == "":
                     #     image = "import/picture.png"
                     # elif not image.startswith("import/"):
