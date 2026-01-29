@@ -383,12 +383,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
             product.measure_type.setText(measure_type)
 
-            price_text = (
-            f"Цена: <s style='color:red;'>{price}</s> "
-            f"{round(price * (100 - discount) / 100, 2)}<br>"
-            if discount != 0
-            else f"Цена: {price}<br>"
-            )
+            # price_text = (
+            # f"Цена: <s style='color:red;'>{price}</s> "
+            # f"{round(price * (100 - discount) / 100, 2)}<br>"
+            # if discount != 0
+            # else f"Цена: {price}<br>"
+            # )
+            
+            price_text = ""
+            if discount != 0:
+                price_text = f"Цена: <s style='color:red;'>{price}</s> {round(price * (100 - discount) / 100, 2)}"
+            else:
+                price_text = f"Цена: {price}"
 
             product.price.setText(price_text)
 
@@ -401,7 +407,11 @@ class MainWindow(QtWidgets.QMainWindow):
             if discount >= 15:
                 product.discount.setStyleSheet("color: #2E8B57")
 
+
             product.quantity.setText(str(quantity))
+            if quantity == 0:
+                product.quantity.setStyleSheet("color: blue")
+
             product.description.setText(description)
 
             pixmap = QtGui.QPixmap(image_url)

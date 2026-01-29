@@ -1,6 +1,6 @@
 import openpyxl
 from datetime import datetime
-from sqlalchemy import create_engine, MetaData, insert, text
+from sqlalchemy import create_engine, MetaData, insert, text, select
 
 
 host = "localhost"
@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
     # Кэш для связи заказ → user_id
     with engine.connect() as conn:
-        user_map = dict(conn.execute(select(User.c.name, User.id).where(User.c.role != "Авторизованный клиент")).fetchall())
+        user_map = dict(conn.execute(select(User.c.name, User.c.id).where(User.c.role != "Авторизованный клиент")).fetchall())
     #    user_map = dict(conn.execute(text("SELECT name, id FROM \"User\" WHERE role <> 'Авторизированный клиент';")).fetchall())
         # user_map = dict(conn.execute(text("SELECT name, id FROM \"User\";")).fetchall())
 
@@ -91,7 +91,8 @@ if __name__ == "__main__":
     delivery_table = openpyxl.load_workbook("import/Пункты выдачи_import.xlsx").active
 
     delivery_rows = [
-        {"id": i + 1, "address": str(row[0].value)}
+        {"id": i + 1,
+         "address": str(row[0].value)}
         for i, row in enumerate(delivery_table.iter_rows(min_row=2))
         if row[0].value is not None
     ]
