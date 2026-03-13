@@ -144,14 +144,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QTextEdit" name="producer_edit">
-      <property name="maximumSize">
-       <size>
-        <width>16777215</width>
-        <height>20</height>
-       </size>
-      </property>
-     </widget>
+     <widget class="QComboBox" name="producer_edit"/>
     </item>
     <item>
      <widget class="QLabel" name="category">
@@ -167,14 +160,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QTextEdit" name="category_edit">
-      <property name="maximumSize">
-       <size>
-        <width>16777215</width>
-        <height>20</height>
-       </size>
-      </property>
-     </widget>
+     <widget class="QComboBox" name="category_edit"/>
     </item>
     <item>
      <widget class="QLabel" name="discount">

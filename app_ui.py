@@ -1,12 +1,13 @@
 import traceback
 from PyQt6 import QtWidgets, QtGui, QtCore, uic
 from sqlalchemy import delete, insert, select, and_, update, or_
-from models import engine, Product, User, OrderItem
+from models import engine, Product, User, OrderItem, Order, Delivery
 import sys
 import shutil
 import os
 
 user = None
+user_id = None
 
 def Warning(message):
     msg = QtWidgets.QMessageBox()
@@ -34,6 +35,7 @@ class LoginWindow(QtWidgets.QMainWindow):
 
     def login(self):
         global user
+        global user_id
 
         login = self.login_edit.toPlainText()
         password = self.password_edit.toPlainText()
@@ -43,6 +45,7 @@ class LoginWindow(QtWidgets.QMainWindow):
 
         if len(result) > 0:
             # global user
+            user_id = result[0][0]
             
             if(result[0][1] == "Администратор"):
                 user = "admin"
@@ -77,7 +80,18 @@ class EditWindow(QtWidgets.QMainWindow):
         self.setWindowIcon(QtGui.QIcon('import/Icon.ico'))
         self.id = id
 
-        # print(user)
+        with engine.begin() as conn:
+            categories = conn.execute(select(Product.c.category).distinct()).fetchall()
+            self.category_edit.clear()
+            for c in categories:
+                if c[0]:
+                    self.category_edit.addItem(c[0])
+    
+            producers = conn.execute(select(Product.c.producer).distinct()).fetchall()
+            self.producer_edit.clear()
+            for p in producers:
+                if p[0]:
+                    self.producer_edit.addItem(p[0])
 
         if user != "admin":
             self.image_url.hide()
@@ -107,12 +121,13 @@ class EditWindow(QtWidgets.QMainWindow):
                 self.measure_type_edit.setText(measure_type)
                 self.price_edit.setText(str(price))
                 self.supplier_edit.setText(supplier)
-                self.producer_edit.setText(producer)
-                self.category_edit.setText(category)
                 self.discount_edit.setText(str(discount))
                 self.quantity_edit.setText(str(quantity))
                 self.description_edit.setText(description)
                 self.image_url_edit.setText(image_url)
+
+            self.category_edit.setCurrentText(category)
+            self.producer_edit.setCurrentText(producer)
 
         else:
             self.delete_btn.hide()
@@ -284,6 +299,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.search_field.hide()
             self.filter_box.hide()
             self.add_btn.hide()
+            self.orders_btn.hide()
 
 
 
@@ -297,6 +313,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.add_btn.clicked.connect(self.add_product)
 
+        self.orders_btn.clicked.connect(self.orders)
+
         self.reload_products()
 
 
@@ -309,6 +327,11 @@ class MainWindow(QtWidgets.QMainWindow):
     def logout(self):
         self.hide()
         self.win.show()
+
+    def orders(self):
+        self.orderWindow = OrderWindow(self)
+        self.hide()
+        self.orderWindow.show()
 
     def reload_products(self):
         product_layout: QtWidgets.QVBoxLayout = self.product_layout
@@ -440,6 +463,198 @@ class MainWindow(QtWidgets.QMainWindow):
         self.editWindow = EditWindow(id=id)
         self.editWindow.saved.connect(self.reload_products)
         self.editWindow.show()
+
+
+class OrderWindow(QtWidgets.QMainWindow):
+    def __init__(self, win: MainWindow):
+        super().__init__()
+        uic.loadUi("./UI/orders.ui", self)
+        self.setWindowTitle("Заказы")
+        self.setWindowIcon(QtGui.QIcon('import/Icon.ico'))
+
+        self.win = win
+
+        if user != "admin":
+            self.add_btn.hide()
+
+        self.back_btn.clicked.connect(self.back)
+        self.add_btn.clicked.connect(self.add)
+
+        self.reload_orders()
+
+    def reload_orders(self):
+        order_layout: QtWidgets.QVBoxLayout = self.order_layout
+
+        while order_layout.count():
+            item = order_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+
+        with engine.begin() as conn:
+            orders = conn.execute(select(Order, Delivery).join(Delivery, Delivery.c.id == Order.c.address_id)).fetchall()
+
+        for order in orders:
+            order_widget = uic.loadUi("./UI/order.ui")
+
+            order_widget.setProperty("id", order[0])
+
+            order_widget.article.setText(str(order[0]))
+            order_widget.status.setText(order[6])
+            order_widget.address.setText(order[8])
+            order_widget.order_date.setText(str(order[1]))
+            order_widget.delivery_date.setText(str(order[2]))
+
+            order_widget.mousePressEvent = lambda event, w=order_widget: self.order_clicked(event, w)
+
+            order_layout.addWidget(order_widget)
+
+    def order_clicked(self, event, w):
+        if event.button() != QtCore.Qt.MouseButton.LeftButton:
+            return
+
+        if user != "admin":
+            return
+        id = w.property("id")
+
+        self.orderEditWindow = OrderEditWindow(id=id)
+        self.orderEditWindow.saved.connect(self.reload_orders)
+        self.orderEditWindow.show()
+
+    def add(self):
+        
+        self.orderAddWindow = OrderAddWindow()
+        self.orderAddWindow.saved.connect(self.reload_orders)
+        self.orderAddWindow.show()
+
+
+    def back(self):
+        self.close()
+        self.win.show()
+
+
+class OrderAddWindow(QtWidgets.QMainWindow):
+    saved = QtCore.pyqtSignal()
+    def __init__(self):
+        super().__init__()
+        uic.loadUi("./UI/order_edit.ui", self)
+
+        self.status_box.addItem("Новый")
+        self.status_box.addItem("Завершеннный")
+
+        self.save_btn.clicked.connect(self.save)
+
+    def save(self):
+        with engine.begin() as conn:
+            address_id = conn.execute(select(Delivery).where(Delivery.c.address==self.address_edit.toPlainText())).fetchone()
+
+        if address_id is None:
+            Warning("Некорректный адрес")
+            return
+
+        try:
+            with engine.begin() as conn:
+                conn.execute(insert(Order).values(id=int(self.article_edit.toPlainText()),
+                                                    status=self.status_box.currentText(),
+                                                    order_date=self.order_date_edit.date().toPyDate(),
+                                                    delivery_date=self.delivery_date_edit.date().toPyDate(),
+                                                    user_id=user_id,
+                                                    address_id=address_id[0]))
+        except Exception as e:
+            print(e)
+
+        self.saved.emit()
+        self.close()
+
+class OrderEditWindow(QtWidgets.QMainWindow):
+    saved = QtCore.pyqtSignal()
+    def __init__(self, id):
+        super().__init__()
+        uic.loadUi("./UI/order_items.ui", self)
+        self.setWindowTitle("Редактирование")
+        self.setWindowIcon(QtGui.QIcon('import/Icon.ico'))
+        self.id = id
+
+        self.add_btn.clicked.connect(self.add_item)
+        self.save_btn.clicked.connect(self.save)
+        self.delete_btn.clicked.connect(self.delete)
+
+        self.reload_items()
+
+    def delete(self):
+        try:
+            with engine.begin() as conn:
+                conn.execute(delete(OrderItem).where(OrderItem.c.order == self.id))
+
+            with engine.begin() as conn:
+                conn.execute(delete(Order).where(Order.c.id == self.id))
+        except Exception as e:
+            print(e)
+
+        self.saved.emit()
+        self.close()
+        
+    def add_item(self):
+        order_layout: QtWidgets.QVBoxLayout = self.order_layout
+
+
+        order_item = uic.loadUi("./UI/order_item.ui")
+
+        order_item.delete_btn.clicked.connect(
+                lambda _, w=order_item: self.delete_item(w)
+            )
+
+        order_layout.addWidget(order_item)
+
+
+
+    def reload_items(self):
+        with engine.begin() as conn:
+            items = conn.execute(select(OrderItem).where(OrderItem.c.order==self.id)).fetchall()
+
+        order_layout: QtWidgets.QVBoxLayout = self.order_layout
+
+        for item in items:
+            order_item = uic.loadUi("./UI/order_item.ui")
+
+            order_item.article.setText(item[1])
+            order_item.quantity.setText(str(item[3]))
+
+            order_item.delete_btn.clicked.connect(
+                lambda _, w=order_item: self.delete_item(w)
+            )
+
+            order_layout.addWidget(order_item)
+
+
+    def delete_item(self, w):
+        w.deleteLater()
+
+    def save(self):
+        order_layout: QtWidgets.QVBoxLayout = self.order_layout
+
+        articles = []
+        quantities = []
+
+        try:
+            while order_layout.count():
+                item = order_layout.takeAt(0)
+                if item.widget():
+                    article = item.widget().article.toPlainText()
+                    quantity = item.widget().quantity.toPlainText()
+                    
+                    articles.append(article)
+                    quantities.append(quantity)
+                    
+        except Exception as e:
+            print(e)
+
+        with engine.begin() as conn:
+            conn.execute(delete(OrderItem).where(OrderItem.c.order == self.id))
+
+        for article, quantity in zip(articles, quantities):
+            with engine.begin() as conn:
+                conn.execute(insert(OrderItem).values(article=article,order=self.id,quantity=quantity))
+        self.close()
 
 
 if __name__ == "__main__":

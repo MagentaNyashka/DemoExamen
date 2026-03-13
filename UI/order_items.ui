@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>363</height>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,26 +18,7 @@
     <item>
      <widget class="QLabel" name="label">
       <property name="text">
-       <string>Список товаров</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QTextEdit" name="search_field"/>
-    </item>
-    <item>
-     <widget class="QComboBox" name="filter_box">
-      <item>
-       <property name="text">
-        <string>Все поставщики</string>
-       </property>
-      </item>
-     </widget>
-    </item>
-    <item>
-     <widget class="QPushButton" name="sort_btn">
-      <property name="text">
-       <string>Сортировка</string>
+       <string>Товары</string>
       </property>
      </widget>
     </item>
@@ -52,10 +33,10 @@
          <x>0</x>
          <y>0</y>
          <width>780</width>
-         <height>68</height>
+         <height>456</height>
         </rect>
        </property>
-       <layout class="QVBoxLayout" name="product_layout"/>
+       <layout class="QVBoxLayout" name="order_layout"/>
       </widget>
      </widget>
     </item>
@@ -67,16 +48,16 @@
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="orders_btn">
+     <widget class="QPushButton" name="save_btn">
       <property name="text">
-       <string>Заказы</string>
+       <string>Сохранить</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="logout_btn">
+     <widget class="QPushButton" name="delete_btn">
       <property name="text">
-       <string>Выход</string>
+       <string>Удалить заказ</string>
       </property>
      </widget>
     </item>
