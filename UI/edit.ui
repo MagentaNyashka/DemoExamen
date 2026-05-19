@@ -144,14 +144,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QTextEdit" name="producer_edit">
-      <property name="maximumSize">
-       <size>
-        <width>16777215</width>
-        <height>20</height>
-       </size>
-      </property>
-     </widget>
+     <widget class="QComboBox" name="producer_box"/>
     </item>
     <item>
      <widget class="QLabel" name="category">
@@ -167,14 +160,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QTextEdit" name="category_edit">
-      <property name="maximumSize">
-       <size>
-        <width>16777215</width>
-        <height>20</height>
-       </size>
-      </property>
-     </widget>
+     <widget class="QComboBox" name="category_box"/>
     </item>
     <item>
      <widget class="QLabel" name="discount">
@@ -246,7 +232,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QLabel" name="image_url">
+     <widget class="QLabel" name="image">
       <property name="maximumSize">
        <size>
         <width>16777215</width>
@@ -254,17 +240,27 @@
        </size>
       </property>
       <property name="text">
-       <string>Путь до изображения</string>
+       <string>Изображение</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QTextEdit" name="image_url_edit">
+     <widget class="QLabel" name="image_pixmap">
       <property name="maximumSize">
        <size>
-        <width>16777215</width>
-        <height>20</height>
+        <width>300</width>
+        <height>200</height>
        </size>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="image_btn">
+      <property name="text">
+       <string>Добавить изображение</string>
       </property>
      </widget>
     </item>

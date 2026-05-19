@@ -16,52 +16,59 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_2">
     <item>
-     <widget class="QLabel" name="icon">
-      <property name="minimumSize">
-       <size>
-        <width>512</width>
-        <height>512</height>
-       </size>
-      </property>
+     <widget class="QLabel" name="label">
       <property name="text">
-       <string/>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
+       <string>Артикул</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QTextEdit" name="login_edit"/>
+     <widget class="QTextEdit" name="article_edit"/>
     </item>
     <item>
-     <widget class="QLabel" name="login_error">
+     <widget class="QLabel" name="label_2">
       <property name="text">
-       <string/>
+       <string>Статус заказа</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QTextEdit" name="password_edit"/>
+     <widget class="QComboBox" name="status_box"/>
     </item>
     <item>
-     <widget class="QLabel" name="error">
+     <widget class="QLabel" name="label_3">
       <property name="text">
-       <string/>
+       <string>Адрес пункта выдачи</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="login_btn">
+     <widget class="QTextEdit" name="address_edit"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_4">
       <property name="text">
-       <string>Войти</string>
+       <string>Дата заказа</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="guest_btn">
+     <widget class="QDateEdit" name="order_date_edit"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_5">
       <property name="text">
-       <string>Войти как гость</string>
+       <string>Дата выдачи</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QDateEdit" name="delivery_date_edit"/>
+    </item>
+    <item>
+     <widget class="QPushButton" name="save_btn">
+      <property name="text">
+       <string>Сохранить</string>
       </property>
      </widget>
     </item>

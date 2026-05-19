@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>800</width>
-    <height>363</height>
+    <height>600</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,32 +16,9 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_2">
     <item>
-     <widget class="QLabel" name="fio">
+     <widget class="QLabel" name="label">
       <property name="text">
-       <string/>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QTextEdit" name="search_edit">
-      <property name="maximumSize">
-       <size>
-        <width>16777215</width>
-        <height>60</height>
-       </size>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QComboBox" name="supplier_box"/>
-    </item>
-    <item>
-     <widget class="QPushButton" name="sort_btn">
-      <property name="text">
-       <string>Сортировка</string>
+       <string>Товары</string>
       </property>
      </widget>
     </item>
@@ -56,24 +33,31 @@
          <x>0</x>
          <y>0</y>
          <width>780</width>
-         <height>145</height>
+         <height>456</height>
         </rect>
        </property>
-       <layout class="QVBoxLayout" name="product_layout"/>
+       <layout class="QVBoxLayout" name="order_layout"/>
       </widget>
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="add_product_btn">
+     <widget class="QPushButton" name="add_btn">
       <property name="text">
        <string>Добавить товар</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="logout_btn">
+     <widget class="QPushButton" name="save_btn">
       <property name="text">
-       <string>Выход</string>
+       <string>Сохранить</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="delete_btn">
+      <property name="text">
+       <string>Удалить заказ</string>
       </property>
      </widget>
     </item>
