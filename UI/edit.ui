@@ -144,7 +144,11 @@
      </widget>
     </item>
     <item>
+<<<<<<< HEAD
      <widget class="QComboBox" name="producer_box"/>
+=======
+     <widget class="QComboBox" name="producer_edit"/>
+>>>>>>> fe35492f007fb09b1324d96c656c8981ecd78a8f
     </item>
     <item>
      <widget class="QLabel" name="category">
@@ -160,7 +164,11 @@
      </widget>
     </item>
     <item>
+<<<<<<< HEAD
      <widget class="QComboBox" name="category_box"/>
+=======
+     <widget class="QComboBox" name="category_edit"/>
+>>>>>>> fe35492f007fb09b1324d96c656c8981ecd78a8f
     </item>
     <item>
      <widget class="QLabel" name="discount">

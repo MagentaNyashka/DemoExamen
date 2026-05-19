@@ -56,7 +56,11 @@
          <x>0</x>
          <y>0</y>
          <width>780</width>
+<<<<<<< HEAD
          <height>145</height>
+=======
+         <height>68</height>
+>>>>>>> fe35492f007fb09b1324d96c656c8981ecd78a8f
         </rect>
        </property>
        <layout class="QVBoxLayout" name="product_layout"/>
@@ -67,6 +71,13 @@
      <widget class="QPushButton" name="add_product_btn">
       <property name="text">
        <string>Добавить товар</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="orders_btn">
+      <property name="text">
+       <string>Заказы</string>
       </property>
      </widget>
     </item>
