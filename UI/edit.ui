@@ -258,9 +258,12 @@
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="image_btn">
-      <property name="text">
-       <string>Добавить изображение</string>
+     <widget class="QTextEdit" name="image_edit">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>20</height>
+       </size>
       </property>
      </widget>
     </item>
